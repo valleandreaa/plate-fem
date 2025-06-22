@@ -4,13 +4,14 @@
 import numpy as np
 import sys
 sys.path.append("./FEM/Assignment2/modulesAss2")
-from numpy.linalg import multi_dot
-from modulesAss2.FEM_utils import *
-from modulesAss2.FEM_utils import quadrature_rule
-from modulesAss2.FEM_utils import shape_functions
-from modulesAss2.material_data import *
-from modulesAss2.functions import *
+
 import math
+from numpy.linalg import multi_dot
+
+from .FEM_utils import *
+from .FEM_utils import quadrature_rule, shape_functions
+from .functions import *
+from .material_data import *
 def stiffness_matrix(e, mesh, MaterialSets):
     """
     Generate the stiffness matrix for a spring element

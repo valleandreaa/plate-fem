@@ -9,7 +9,7 @@ Created on Thu Apr 16 15:09:53 2020
 import numpy as np
 from numpy.linalg import inv
 
-from modulesAss2.FEM_engine import *
+from ..FEM_engine import *
 
 # -----------------------------------------------------------------------------
 

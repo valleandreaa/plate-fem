@@ -18,3 +18,19 @@ Make a script that through a terminal, is able to:
 - automatic meshing (choose paraemters and show finess)
 - select solvers
 - print out the files to visualize results.
+
+
+
+PlateFEM provides simple finite element utilities for plate analysis. A small interactive CLI allows creation of nodes, segments and arcs, definition of material parameters and solution of the problem with a linear solver.
+
+The library lives in the `platefem` package. Documentation can be generated with Sphinx:
+
+```bash
+sphinx-build -b html docs/source docs/build/html
+```
+
+The CLI entry point can be executed with:
+
+```bash
+python -m platefem.cli
+```

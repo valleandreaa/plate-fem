@@ -1,6 +1,7 @@
-import numpy as np
 import sys
-from numpy.lib.arraysetops import unique
+import numpy as np
+from numpy import unique
+
 # -----------------------------------------------------------------------------
 
 class BoundaryConditions:

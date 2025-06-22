@@ -5,13 +5,11 @@
 
 def run(mesh, BCs, MaterialSets, Procedures):
 
-    solverType = Procedures["solver"]["type"]
-    
-    exec("from modulesAss2.solvers."+solverType+" import "+solverType)
+    solver_type = Procedures["solver"]["type"]
 
-    U = eval (solverType+"(mesh, BCs, MaterialSets)")
-    
+    module = __import__(f"platefem.solvers.{solver_type}", fromlist=[solver_type])
+    solve_fn = getattr(module, solver_type)
 
-    
+    U = solve_fn(mesh, BCs, MaterialSets)
+
     return U
-
