@@ -23,7 +23,7 @@ scripts are located in the `examples` folder.
 
 Running the cli for a plate and displaying the VTK results we get:
 
-![Sample Von Mises](examples\imgs\VonMises_8000.png)
+![Sample Von Mises](examples/imgs/VonMises_8000.png)
 
 ## Documentation
 
