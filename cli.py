@@ -54,7 +54,7 @@ def input_lines():
     return lines, arcs
 
 
-def write_geo(filename, nodes, lines, arcs, mesh_size, surf_name):
+def write_geo(filename, nodes, lines, arcs, mesh_size, surf_name, element_type):
     """Write a gmsh .geo file describing the geometry."""
     with open(filename + '.geo', 'w') as f:
         f.write(f"lc = {mesh_size};\n")
@@ -76,7 +76,11 @@ def write_geo(filename, nodes, lines, arcs, mesh_size, surf_name):
         if all_line_ids:
             ids = ','.join(str(i) for i in all_line_ids)
             f.write(f"Line Loop(1) = {{{ids}}};\n")
-            f.write("Plane Surface(1) = {1};\n")
+            if element_type == 'quad':
+                f.write("Plane Surface(1) = {1};\n")
+                f.write("Recombine Surface{1};\n")
+            else:
+                f.write("Plane Surface(1) = {1};\n")
             f.write(f"Physical Surface('{surf_name}') = {{1}};\n")
         for name, ids in line_groups.items():
             ids_str = ','.join(str(i) for i in ids)
@@ -95,11 +99,16 @@ def main():
         return
     mesh_size = float(input("Characteristic length for mesh: "))
     surf_name = input("Name for the surface region: ") or "surface"
+    element_type = input("Element type (triangle/quad) [triangle]: ").strip().lower() or 'triangle'
     mesh_file = "generated_mesh"
-    write_geo(mesh_file, nodes, lines, arcs, mesh_size, surf_name)
+    write_geo(mesh_file, nodes, lines, arcs, mesh_size, surf_name, element_type)
 
     print("Meshing with gmsh...")
-    mesh = mesh_engine.GMSH(mesh_file)
+    mesh = mesh_engine.GMSH(mesh_file, element_type)
+    print(f"Max skewness: {mesh.skewness.max():.3f}")
+    if element_type != 'triangle':
+        print('Only triangle elements are supported for analysis.')
+        return
 
     MaterialSets = {
         '1': {

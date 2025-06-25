@@ -22,6 +22,7 @@ Make a script that through a terminal, is able to:
 
 
 PlateFEM provides simple finite element utilities for plate analysis. A small interactive CLI allows creation of nodes, segments and arcs, definition of material parameters and solution of the problem with a linear solver.
+The mesher now supports generation of triangular or quadrilateral grids and reports the maximum element skewness after meshing.
 
 The library lives in the `platefem` package. Documentation can be generated with Sphinx:
 
