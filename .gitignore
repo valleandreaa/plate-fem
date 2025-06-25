@@ -1,7 +1,5 @@
-Assignment2/Img/*
-# Assignment1/Img/*
-Assignment2/meshio/*
-Assignment1/modulesAss1/__pycache__/*
-Assignment1/modulesAss1/solvers/__pycache__/*
-Assignment2/modulesAss2/__pycache__/*
-Assignment2/modulesAss2/solvers/__pycache__/*
+examples/imgs/*
+!examples/imgs/VonMises_8000.png
+examples/meshio/*
+platefem/__pycache__/*
+platefem/solvers/__pycache__/*

@@ -1,37 +1,39 @@
-[MESHER]
-- able to generate the mesh and coverting it as necessary.
-[FEM-Engine]
-- applying physical parameters and forcess through a terminal. which also opens the mesh assigning references in order to help out in the forces assignment
+# PlateFEM
 
-[SOLVER]
-- being able to apply different solvers 
+PlateFEM is a small collection of utilities for 2D plate finite element analysis.
+It provides a minimal mesher, a FEM engine and different solver backends that can
+be invoked from a command line interface.  The project originated from
+university assignments and is organised as a standard Python package.
 
-[OUTPUT-FILE]
-- being able to output the files
+## Features
 
-[OVERALL]
-Make a script that through a terminal, is able to:
-- assign the nodes
-- then the segmentes or arc
-- then physical properties/thickness if necessary
-- then boundaries and forces
-- automatic meshing (choose paraemters and show finess)
-- select solvers
-- print out the files to visualize results.
+- **Mesher** – generates triangular or quadrilateral meshes using Gmsh and
+  reports the element skewness.
+- **FEM engine** – applies material properties, loads and boundary conditions and
+  computes element stresses.
+- **Solvers** – linear and non‑linear solvers are provided in the `platefem.solvers`
+  module.
+- **CLI** – create models from YAML configuration files and write VTK results for
+  visualisation.
 
+Example configuration files can be found in `sample_config.yaml` and simple usage
+scripts are located in the `examples` folder.
 
+## Sample output
 
-PlateFEM provides simple finite element utilities for plate analysis. A small interactive CLI allows creation of nodes, segments and arcs, definition of material parameters and solution of the problem with a linear solver.
-The mesher now supports generation of triangular or quadrilateral grids and reports the maximum element skewness after meshing.
+Running the cli for a plate and displaying the VTK results we get:
 
-The library lives in the `platefem` package. Documentation can be generated with Sphinx:
+![Sample Von Mises](examples\imgs\VonMises_8000.png)
+
+## Documentation
+
+The API is documented with Sphinx.  HTML pages can be generated with:
 
 ```bash
 sphinx-build -b html docs/source docs/build/html
 ```
 
-The CLI entry point can be executed with:
+## License
 
-```bash
-python -m platefem.cli
-```
+This project is distributed for educational purposes and comes without any
+warranty.

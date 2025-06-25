@@ -3,7 +3,6 @@
 """
 import numpy as np
 import sys
-sys.path.append("./FEM/Assignment2/modulesAss2")
 
 import math
 from numpy.linalg import multi_dot

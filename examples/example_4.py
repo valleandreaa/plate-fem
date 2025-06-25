@@ -1,19 +1,10 @@
-"""
-@author: andrea.valle.3@studenti.unipd.it
-"""
+
 import numpy as np
 import sys
-
-# Path modules
-sys.path.append("./FEM/Assignment2/modulesAss2")
-
 import meshio
-import modulesAss2.BC_engine as BC_engine
-import modulesAss2.mesh_engine as mesh_engine
-import modulesAss2.FEM_engine as FEM_engine
-import modulesAss2.solvers.solver as solver
-import modulesAss2.functions as functions
-# Dictionary for caracterization of the problem
+from platefem import bc_engine, mesh_engine, fem_engine, functions
+from platefem.solvers import solver
+
 Procedures = {"solver": {"type": "linear"},
             }
 
@@ -37,7 +28,7 @@ MaterialSets = {
     }
 
 # Setting the boundary conditions
-BCs = BC_engine.BoundaryConditions()     
+BCs = bc_engine.BoundaryConditions() 
 
 bc_sym_y = BCs.set("Dirichlet", "sym_y", mesh, [0], [0.0])
 
@@ -60,7 +51,7 @@ NNodesFrontal= len(BCs.set("Neumann", "frontal", mesh, [0], [1.0]))
 
 
 bc_frontal = BCs.set("Neumann", "frontal", mesh, [0], [1.0])
-bc_frontal = FEM_engine.NodalEquivalentLoads(bc_frontal, mesh)
+bc_frontal = fem_engine.NodalEquivalentLoads(bc_frontal, mesh)
 
 
 
@@ -74,7 +65,7 @@ U = solver.run(mesh, BCs, MaterialSets, Procedures)
 
 U = U.reshape(len(mesh.points),mesh.d)
 
-stress, VonMises, errorVonMises, VonMisesExact = FEM_engine.triangle_stress(mesh, U, MaterialSets, Procedures)
+stress, VonMises, errorVonMises, VonMisesExact = fem_engine.triangle_stress(mesh, U, MaterialSets, Procedures)
 
 mesh.point_data = {'Displacements': U.reshape(len(mesh.points),mesh.d)}
 err = functions.error(errorVonMises, mesh)

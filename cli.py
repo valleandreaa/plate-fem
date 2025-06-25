@@ -5,8 +5,8 @@ import yaml
 import meshio
 import matplotlib.pyplot as plt
 
-from Assignment2.modulesAss2 import BC_engine, FEM_engine, mesh_engine
-from Assignment2.modulesAss2.solvers import solver
+from platefem import bc_engine, fem_engine, mesh_engine
+from platefem.solvers import solver
 from cli import write_geo
 
 
@@ -56,7 +56,7 @@ def run_from_yaml(path):
 
     MaterialSets = cfg['materials']
 
-    BCs = BC_engine.BoundaryConditions()
+    BCs = bc_engine.BoundaryConditions()
     bc_data = []
     for name, binfo in cfg.get('boundaries', {}).items():
         btype = binfo['type'].lower()
@@ -71,7 +71,7 @@ def run_from_yaml(path):
     U = solver.run(mesh, BCs, MaterialSets, Procedures)
     U = U.reshape(len(mesh.points), mesh.dofsNode)
 
-    stress, VonMises, _, _ = FEM_engine.triangle_stress(mesh, U, MaterialSets, Procedures)
+    stress, VonMises, _, _ = fem_engine.triangle_stress(mesh, U, MaterialSets, Procedures)
 
     mesh.point_data = {'Displacements': U}
     mesh.cell_data = {'VonMises': [VonMises]}
