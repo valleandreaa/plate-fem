@@ -7,7 +7,8 @@ def run(mesh, BCs, MaterialSets, Procedures):
 
     solver_type = Procedures["solver"]["type"]
 
-    module = __import__(f"platefem.solvers.{solver_type}", fromlist=[solver_type])
+    from importlib import import_module
+    module = import_module(f"{__package__}.{solver_type}")
     solve_fn = getattr(module, solver_type)
 
     U = solve_fn(mesh, BCs, MaterialSets)

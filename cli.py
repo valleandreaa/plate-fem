@@ -1,143 +1,72 @@
-"""Command line interface for building and solving plate problems."""
+"""Run a plate analysis using parameters from a YAML file."""
 
+import sys
+import yaml
 import meshio
+import matplotlib.pyplot as plt
 
-from . import BC_engine, FEM_engine, mesh_engine
-from .solvers import solver
-
-
-def input_nodes():
-    """Interactively collect node coordinates from the user."""
-
-    nodes = []
-    print("Enter node coordinates 'x y' (type 'done' to finish):")
-    while True:
-        line = input('node> ').strip()
-        if line.lower() == 'done':
-            break
-        try:
-            x, y = map(float, line.split())
-        except ValueError:
-            print("Invalid input. Provide two numbers or 'done'.")
-            continue
-        nodes.append((x, y))
-    return nodes
+from Assignment2.modulesAss2 import BC_engine, FEM_engine, mesh_engine
+from Assignment2.modulesAss2.solvers import solver
+from cli import write_geo
 
 
-def input_lines():
-    """Interactively collect line and arc definitions."""
+def plot_setup(mesh, BCs):
+    """Visualize mesh nodes and applied boundary conditions."""
+    x = mesh.points[:, 0]
+    y = mesh.points[:, 1]
+    tris = mesh.elements
+    plt.triplot(x, y, tris, color="lightgray")
 
-    lines = []
-    arcs = []
-    print("Define segments with 'n1 n2 name'.")
-    print("Define arcs with 'arc n1 center n2 name'.")
-    print("Type 'done' when finished.")
-    while True:
-        line = input('line> ').strip()
-        if line.lower() == 'done':
-            break
-        parts = line.split()
-        if not parts:
-            continue
-        if parts[0].lower() == 'arc':
-            if len(parts) != 5:
-                print("Format for arc: arc n1 center n2 name")
-                continue
-            _, n1, center, n2, name = parts
-            arcs.append((int(n1), int(center), int(n2), name))
-        else:
-            if len(parts) != 3:
-                print("Format for segment: n1 n2 name")
-                continue
-            n1, n2, name = parts
-            lines.append((int(n1), int(n2), name))
-    return lines, arcs
+    dir_nodes = {bc[0] for bc in BCs.data if bc[1] == 'Dirichlet'}
+    neu_nodes = {bc[0] for bc in BCs.data if bc[1] == 'Neumann'}
 
-
-def write_geo(filename, nodes, lines, arcs, mesh_size, surf_name, element_type):
-    """Write a gmsh .geo file describing the geometry."""
-    with open(filename + '.geo', 'w') as f:
-        f.write(f"lc = {mesh_size};\n")
-        for i, (x, y) in enumerate(nodes, start=1):
-            f.write(f"Point({i}) = {{{x}, {y}, 0, lc}};\n")
-        line_id = 0
-        line_groups = {}
-        all_line_ids = []
-        for n1, n2, name in lines:
-            line_id += 1
-            f.write(f"Line({line_id}) = {{{n1}, {n2}}};\n")
-            line_groups.setdefault(name, []).append(line_id)
-            all_line_ids.append(line_id)
-        for n1, c, n2, name in arcs:
-            line_id += 1
-            f.write(f"Circle({line_id}) = {{{n1}, {c}, {n2}}};\n")
-            line_groups.setdefault(name, []).append(line_id)
-            all_line_ids.append(line_id)
-        if all_line_ids:
-            ids = ','.join(str(i) for i in all_line_ids)
-            f.write(f"Line Loop(1) = {{{ids}}};\n")
-            if element_type == 'quad':
-                f.write("Plane Surface(1) = {1};\n")
-                f.write("Recombine Surface{1};\n")
-            else:
-                f.write("Plane Surface(1) = {1};\n")
-            f.write(f"Physical Surface('{surf_name}') = {{1}};\n")
-        for name, ids in line_groups.items():
-            ids_str = ','.join(str(i) for i in ids)
-            f.write(f"Physical Curve('{name}') = {{{ids_str}}};\n")
+    if dir_nodes:
+        plt.scatter(x[list(dir_nodes)], y[list(dir_nodes)], color='red', label='Dirichlet')
+    if neu_nodes:
+        plt.scatter(x[list(neu_nodes)], y[list(neu_nodes)], color='green', label='Neumann')
+        for bc in BCs.data:
+            if bc[1] == 'Neumann':
+                n = bc[0]
+                dof = bc[2]
+                scale = 0.05 * (y.max() - y.min())
+                if dof == 1:
+                    plt.arrow(x[n], y[n], 0, bc[3]*scale, color='blue', head_width=scale*0.2)
+                elif dof == 0:
+                    plt.arrow(x[n], y[n], bc[3]*scale, 0, color='blue', head_width=scale*0.2)
+    plt.legend()
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.title('Plate configuration')
+    plt.axis('equal')
+    plt.show()
 
 
-def main():
-    """Run the interactive CLI for creating and solving a plate model."""
-    nodes = input_nodes()
-    if len(nodes) < 3:
-        print("Need at least 3 nodes to create a surface")
-        return
-    lines, arcs = input_lines()
-    if not lines and not arcs:
-        print("No lines defined")
-        return
-    mesh_size = float(input("Characteristic length for mesh: "))
-    surf_name = input("Name for the surface region: ") or "surface"
-    element_type = input("Element type (triangle/quad) [triangle]: ").strip().lower() or 'triangle'
-    mesh_file = "generated_mesh"
-    write_geo(mesh_file, nodes, lines, arcs, mesh_size, surf_name, element_type)
+def run_from_yaml(path):
+    with open(path) as f:
+        cfg = yaml.safe_load(f)
 
-    print("Meshing with gmsh...")
-    mesh = mesh_engine.GMSH(mesh_file, element_type)
-    print(f"Max skewness: {mesh.skewness.max():.3f}")
-    if element_type != 'triangle':
-        print('Only triangle elements are supported for analysis.')
-        return
+    nodes = cfg['nodes']
+    lines = cfg.get('lines', [])
+    arcs = cfg.get('arcs', [])
+    mesh_conf = cfg['mesh']
+    mesh_file = mesh_conf.get('file', 'generated_mesh')
+    write_geo(mesh_file, nodes, lines, arcs, mesh_conf['size'], mesh_conf.get('surface_name', 'surface'), mesh_conf.get('element_type', 'triangle'))
 
-    MaterialSets = {
-        '1': {
-            'plane deformation': input("Plane deformation (plane stress/plane strain): "),
-            'material behavior': 'isotropic linear elastic',
-            'elastic properties': {"Young's modulus": float(input("Young's modulus: ")),
-                                   "Poisson's ratio": float(input("Poisson's ratio: "))},
-            'geometric properties': {'thickness': float(input("Thickness: "))},
-            'stiffness matrix': {'evaluation': 'closed form'}
-        }
-    }
+    mesh = mesh_engine.GMSH(mesh_file, mesh_conf.get('element_type', 'triangle'))
+
+    MaterialSets = cfg['materials']
 
     BCs = BC_engine.BoundaryConditions()
     bc_data = []
-    boundary_names = {name for _, _, name in lines} | {name for _, _, _, name in arcs}
-    for bname in boundary_names:
-        btype = input(f"Boundary '{bname}' type (none/Dirichlet/Neumann): ").strip().lower()
-        if btype == 'none' or btype == '':
-            continue
+    for name, binfo in cfg.get('boundaries', {}).items():
+        btype = binfo['type'].lower()
         if btype == 'dirichlet':
-            ux = float(input("  ux value: "))
-            uy = float(input("  uy value: "))
-            bc_data += BCs.set('Dirichlet', bname, mesh, [0,1], [ux, uy])
+            bc_data += BCs.set('Dirichlet', name, mesh, [0, 1], binfo['values'])
         elif btype == 'neumann':
-            fy = float(input("  force value in y: "))
-            bc_data += BCs.set('Neumann', bname, mesh, [1], [fy])
+            bc_data += BCs.set('Neumann', name, mesh, [1], [binfo['value']])
     BCs.data = bc_data
 
-    Procedures = {"solver": {"type": input("Solver type (linear): ") or "linear"}}
+    Procedures = cfg.get('procedures', {'solver': {'type': 'linear'}})
 
     U = solver.run(mesh, BCs, MaterialSets, Procedures)
     U = U.reshape(len(mesh.points), mesh.dofsNode)
@@ -150,6 +79,15 @@ def main():
     vtk_file = mesh_file + '.vtk'
     meshio.write_points_cells(vtk_file, mesh.points, cells, point_data=mesh.point_data, cell_data=mesh.cell_data, binary=False)
     print(f"Results written to {vtk_file}")
+
+    plot_setup(mesh, BCs)
+
+
+def main():
+    if len(sys.argv) != 2:
+        print("Usage: python yaml_cli.py <config.yaml>")
+        return
+    run_from_yaml(sys.argv[1])
 
 
 if __name__ == '__main__':

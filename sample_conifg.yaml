@@ -1,0 +1,41 @@
+mesh:
+  size: 1.0
+  surface_name: plate
+  element_type: triangle
+  file: plate
+
+nodes:
+  - [0, 0]
+  - [1, 0]
+  - [1, 1]
+  - [0, 1]
+
+lines:
+  - [1, 2, bottom]
+  - [2, 3, right]
+  - [3, 4, top]
+  - [4, 1, left]
+
+materials:
+  '1':
+    plane deformation: plane stress
+    material behavior: isotropic linear elastic
+    elastic properties:
+      Young's modulus: 210000000.0
+      Poisson's ratio: 0.3
+    geometric properties:
+      thickness: 1.0
+    stiffness matrix:
+      evaluation: closed form
+
+boundaries:
+  left:
+    type: Dirichlet
+    values: [0.0, 0.0]
+  right:
+    type: Neumann
+    value: -1000.0
+
+procedures:
+  solver:
+    type: linear

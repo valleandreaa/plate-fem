@@ -1,5 +1,3 @@
-"""Solver subpackage."""
+from . import linear, nonlinear, solver
 
-from . import linear, solver
-
-__all__ = ['linear', 'solver']
+__all__ = ['linear', 'nonlinear', 'solver']
